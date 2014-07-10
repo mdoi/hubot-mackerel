@@ -2,6 +2,9 @@
 #   saba
 #
 # Commands:
+#   hubot mackerel hosts - show all hosts and graph urls
+#   hubot mackerel hosts service <service> - show hosts and graph urls filterd by specified service
+#   hubot mackerel hosts service <service> role <role> - show hosts and graph urls filterd by specified service and role
 #
 # Author:
 #   mdoi
