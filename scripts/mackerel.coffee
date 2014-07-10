@@ -35,7 +35,7 @@ handleResponse = (msg, handler) ->
     switch res.statusCode
       when 404
         response = JSON.parse(body)
-        msg.send "Failed to get mackerel api response: 404 Not Found"
+        msg.send "Failed to get mackerel api response: Not Found"
       when 401
         msg.send 'Failed to get mackerel api response: Not authorized'
       when 500
