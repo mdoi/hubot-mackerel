@@ -51,6 +51,12 @@ handleResponse = (msg, handler) ->
 
 module.exports = (robot) ->
   robot.respond /mackerel hosts(.*)/i, (msg) ->
+    unless checkToken(msg)
+      return
+    unless checkEndpoint(msg)
+      return
+    unless checkUrlBase(msg)
+      return
     queryString = ""
     if msg.match[1].length > 0
       queryStringArray = []
@@ -66,12 +72,6 @@ module.exports = (robot) ->
         queryStringArray.push('role=' + optionMatch[1])
       if addQueryString
         queryString = '?' + queryStringArray.join('&')
-    unless checkToken(msg)
-      return
-    unless checkEndpoint(msg)
-      return
-    unless checkUrlBase(msg)
-      return
     msg.http(process.env.HUBOT_MACKEREL_API_ENDPOINT + "hosts.json" + queryString)
       .headers("X-Api-Key": process.env.HUBOT_MACKEREL_API_KEY)
       .get() handleResponse  msg, (response) ->
