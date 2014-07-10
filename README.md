@@ -1,7 +1,7 @@
-hubot-yo
+hubot-mackerel
 ========
 
-saba
+hubot eat saba
 
 get involved
 ============
