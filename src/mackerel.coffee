@@ -1,5 +1,5 @@
 # Description:
-#   saba
+#   hubot eat saba
 #
 # Commands:
 #   hubot mackerel hosts - show all hosts and graph urls
