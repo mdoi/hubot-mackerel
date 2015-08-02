@@ -4,6 +4,7 @@
 # Commands:
 #   hubot mackerel hosts - show all hosts and graph urls
 #   hubot mackerel hosts [service <service>] [role <role>] [name <name>] [status <status>] - show hosts and graph urls filterd by specified service, role, name or status
+#   hubot mackerel status <hostId> <standby|working|maintenance|poweroff> - update status of the host
 #
 # Author:
 #   mdoi
@@ -89,3 +90,29 @@ module.exports = (robot) ->
             for k,v of response['hosts']
               hosts_text += "#{v['name']} - #{v['id']}" + "\n" + process.env.HUBOT_MACKEREL_URL_BASE + v['id'] + "\n\n"
             msg.send hosts_text
+
+  robot.respond /mackerel status (\w+) (standby|working|maintenance|poweroff)/i, (msg) ->
+    unless checkToken(msg)
+      return
+    unless checkEndpoint(msg)
+      return
+    unless checkUrlBase(msg)
+      return
+
+    host_id = msg.match[1]
+    status = msg.match[2]
+
+    if !host_id
+      msg.send "No host_id specified"
+
+    post_content = JSON.stringify({status: status})
+    headers =
+      "X-Api-Key": process.env.HUBOT_MACKEREL_API_KEY
+      "Content-Type": "application/json"
+
+    msg.http(process.env.HUBOT_MACKEREL_API_ENDPOINT + "hosts/#{host_id}/status")
+      .headers(headers)
+      .post(post_content) handleResponse  msg, (response) ->
+        if !response.success
+          msg.send "Failed to update status: #{host_id} to #{status}"
+        msg.send "Status of #{host_id} is updated to #{status}"
