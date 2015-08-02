@@ -3,8 +3,7 @@
 #
 # Commands:
 #   hubot mackerel hosts - show all hosts and graph urls
-#   hubot mackerel hosts service <service> - show hosts and graph urls filterd by specified service
-#   hubot mackerel hosts service <service> role <role> - show hosts and graph urls filterd by specified service and role
+#   hubot mackerel hosts [service <service>] [role <role>] [name <name>] [status <status>] - show hosts and graph urls filterd by specified service, role, name or status
 #
 # Author:
 #   mdoi
@@ -70,6 +69,14 @@ module.exports = (robot) ->
       if optionMatch?
         addQueryString = true
         queryStringArray.push('role=' + optionMatch[1])
+      optionMatch = /name\s+(\S+)/.exec(options)
+      if optionMatch?
+        addQueryString = true
+        queryStringArray.push('name=' + optionMatch[1])
+      optionMatch = /status\s+(\S+)/.exec(options)
+      if optionMatch?
+        addQueryString = true
+        queryStringArray.push('status=' + optionMatch[1])
       if addQueryString
         queryString = '?' + queryStringArray.join('&')
     msg.http(process.env.HUBOT_MACKEREL_API_ENDPOINT + "hosts.json" + queryString)
