@@ -4,6 +4,7 @@
 # Commands:
 #   hubot mackerel hosts - show all hosts and graph urls
 #   hubot mackerel hosts [service <service>] [role <role>] [name <name>] [status <status>] - show hosts and graph urls filterd by specified service, role, name or status
+#   hubot mackerel host <hostId> - show detail information about the host
 #   hubot mackerel status <hostId> <standby|working|maintenance|poweroff> - update status of the host
 #   hubot mackerel retire <hostId> - retuire the host
 #
@@ -142,3 +143,26 @@ module.exports = (robot) ->
         if !response.success
           msg.send "Failed to retire host: #{host_id}"
         msg.send "host #{host_id} retired"
+
+  robot.respond /mackerel host (\w+)/i, (msg) ->
+    unless checkToken(msg)
+      return
+    unless checkEndpoint(msg)
+      return
+    unless checkUrlBase(msg)
+      return
+
+    host_id = msg.match[1]
+
+    if !host_id
+      msg.send "No host_id specified"
+
+    headers =
+      "X-Api-Key": process.env.HUBOT_MACKEREL_API_KEY
+
+    msg.http(process.env.HUBOT_MACKEREL_API_ENDPOINT + "hosts/#{host_id}")
+      .headers(headers)
+      .get() handleResponse  msg, (response) ->
+        if !response.host
+          msg.send "Failed to get host information: #{host_id}"
+        msg.send JSON.stringify response.host, null, 2
