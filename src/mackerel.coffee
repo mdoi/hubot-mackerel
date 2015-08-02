@@ -87,5 +87,5 @@ module.exports = (robot) ->
           else
             hosts_text = ""
             for k,v of response['hosts']
-              hosts_text += v['name'] + "\n" + process.env.HUBOT_MACKEREL_URL_BASE + v['id'] + "\n\n"
+              hosts_text += "#{v['name']} - #{v['id']}" + "\n" + process.env.HUBOT_MACKEREL_URL_BASE + v['id'] + "\n\n"
             msg.send hosts_text
