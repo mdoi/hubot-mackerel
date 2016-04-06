@@ -3,8 +3,10 @@
 #
 # Commands:
 #   hubot mackerel hosts - show all hosts and graph urls
-#   hubot mackerel hosts service <service> - show hosts and graph urls filterd by specified service
-#   hubot mackerel hosts service <service> role <role> - show hosts and graph urls filterd by specified service and role
+#   hubot mackerel hosts [service <service>] [role <role>] [name <name>] [status <status>] - show hosts and graph urls filterd by specified service, role, name or status
+#   hubot mackerel host <hostId> - show detail information about the host
+#   hubot mackerel status <hostId> <standby|working|maintenance|poweroff> - update status of the host
+#   hubot mackerel retire <hostId> - retuire the host
 #
 # Author:
 #   mdoi
@@ -70,6 +72,14 @@ module.exports = (robot) ->
       if optionMatch?
         addQueryString = true
         queryStringArray.push('role=' + optionMatch[1])
+      optionMatch = /name\s+(\S+)/.exec(options)
+      if optionMatch?
+        addQueryString = true
+        queryStringArray.push('name=' + optionMatch[1])
+      optionMatch = /status\s+(\S+)/.exec(options)
+      if optionMatch?
+        addQueryString = true
+        queryStringArray.push('status=' + optionMatch[1])
       if addQueryString
         queryString = '?' + queryStringArray.join('&')
     msg.http(process.env.HUBOT_MACKEREL_API_ENDPOINT + "hosts.json" + queryString)
@@ -80,5 +90,79 @@ module.exports = (robot) ->
           else
             hosts_text = ""
             for k,v of response['hosts']
-              hosts_text += v['name'] + "\n" + process.env.HUBOT_MACKEREL_URL_BASE + v['id'] + "\n\n"
+              hosts_text += "#{v['name']} - #{v['id']}" + "\n" + process.env.HUBOT_MACKEREL_URL_BASE + v['id'] + "\n\n"
             msg.send hosts_text
+
+  robot.respond /mackerel status (\w+) (standby|working|maintenance|poweroff)/i, (msg) ->
+    unless checkToken(msg)
+      return
+    unless checkEndpoint(msg)
+      return
+    unless checkUrlBase(msg)
+      return
+
+    host_id = msg.match[1]
+    status = msg.match[2]
+
+    if !host_id
+      msg.send "No host_id specified"
+
+    post_content = JSON.stringify({status: status})
+    headers =
+      "X-Api-Key": process.env.HUBOT_MACKEREL_API_KEY
+      "Content-Type": "application/json"
+
+    msg.http(process.env.HUBOT_MACKEREL_API_ENDPOINT + "hosts/#{host_id}/status")
+      .headers(headers)
+      .post(post_content) handleResponse  msg, (response) ->
+        if !response.success
+          msg.send "Failed to update status: #{host_id} to #{status}"
+        msg.send "Status of #{host_id} is updated to #{status}"
+
+  robot.respond /mackerel retire (\w+)/i, (msg) ->
+    unless checkToken(msg)
+      return
+    unless checkEndpoint(msg)
+      return
+    unless checkUrlBase(msg)
+      return
+
+    host_id = msg.match[1]
+
+    if !host_id
+      msg.send "No host_id specified"
+
+    post_content = JSON.stringify({})
+    headers =
+      "X-Api-Key": process.env.HUBOT_MACKEREL_API_KEY
+      "Content-Type": "application/json"
+
+    msg.http(process.env.HUBOT_MACKEREL_API_ENDPOINT + "hosts/#{host_id}/retire")
+      .headers(headers)
+      .post(post_content) handleResponse  msg, (response) ->
+        if !response.success
+          msg.send "Failed to retire host: #{host_id}"
+        msg.send "host #{host_id} retired"
+
+  robot.respond /mackerel host (\w+)/i, (msg) ->
+    unless checkToken(msg)
+      return
+    unless checkEndpoint(msg)
+      return
+    unless checkUrlBase(msg)
+      return
+
+    host_id = msg.match[1]
+
+    if !host_id
+      msg.send "No host_id specified"
+
+    headers =
+      "X-Api-Key": process.env.HUBOT_MACKEREL_API_KEY
+
+    msg.http(process.env.HUBOT_MACKEREL_API_ENDPOINT + "hosts/#{host_id}")
+      .headers(headers)
+      .get() handleResponse  msg, (response) ->
+        if !response.host
+          msg.send "Failed to get host information: #{host_id}"
+        msg.send JSON.stringify response.host, null, 2
